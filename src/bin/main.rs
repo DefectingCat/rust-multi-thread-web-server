@@ -1,5 +1,4 @@
 use std::{
-    fs,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     thread,
@@ -24,23 +23,19 @@ fn handle_connection(mut stream: TcpStream) {
     let get = b"GET / HTTP/1.1\r\n";
     let sleep = b"GET /sleep HTTP/1.1\r\n";
 
-    let (mut status_line, filename) = if buffer.starts_with(get) {
-        ("HTTP/1.1 200 OK", "hello.html")
+    let status_line = if buffer.starts_with(get) {
+        "HTTP/1.1 200 OK"
     } else if buffer.starts_with(sleep) {
         thread::sleep(Duration::from_secs(5));
-        ("HTTP/1.1 200 OK", "hello.html")
+        "HTTP/1.1 200 OK"
     } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
+        "HTTP/1.1 404 NOT FOUND"
     };
 
-    let contents = fs::read_to_string(filename).unwrap_or_else(|err| {
-        println!("Failed to read file: {}, {}", filename, err);
-        status_line = "HTTP/1.1 500 OK INTERNAL SERVER ERROR";
-        "".to_string()
-    });
+    let contents = "{\"hello\": \"world\"}";
 
     let response = format!(
-        "{}\r\nContent-Length: {}\r\n\r\n{}",
+        "{}\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{}",
         status_line,
         contents.len(),
         contents
